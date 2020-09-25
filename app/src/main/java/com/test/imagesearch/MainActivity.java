@@ -15,6 +15,7 @@ import android.app.ProgressDialog;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -55,8 +56,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        init();
+        initViewHolder();
+        setupRecyclerView();
+    }
 
 
+    private void init(){
         rv_img = findViewById(R.id.rv_img);
 
         et_searchtxt= findViewById(R.id.et_searchtxt);
@@ -73,55 +79,50 @@ public class MainActivity extends AppCompatActivity {
 
         dialog = new ProgressDialog(MainActivity.this);
 
-        mMainActivityViewModel = ViewModelProviders.of(this).get(MainActivityViewModel.class);
 
+        btn_search.setOnClickListener(view -> {
 
-        mMainActivityViewModel.init(getApplicationContext());
-
-
-        mMainActivityViewModel.getData().observe(MainActivity.this, new Observer<List<MasterData>>() {
-            @Override
-            public void onChanged(@Nullable List<MasterData> data) {
-                if (data!=null)
-                    masterList.addAll(data);
-
-                imageSearchAdapter.notifyDataSetChanged();
+            try {
+                InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        });
 
-        setupRecyclerView();
-
-
-        btn_search.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (et_searchtxt.getText().toString().isEmpty()){
-                    Toast.makeText(MainActivity.this,"Enter Value to Search",Toast.LENGTH_SHORT).show();
+                if (et_searchtxt.getText().toString().isEmpty() || et_searchtxt.getText().toString().length()<3){
+                    Toast.makeText(MainActivity.this,"Enter 3 Characters to search",Toast.LENGTH_SHORT).show();
                 }else{
-                    if (et_searchtxt.getText().toString().length()<3){
+                    /*if (et_searchtxt.getText().toString().length()<3){
                         Toast.makeText(MainActivity.this,"Enter 3 Characters to search",Toast.LENGTH_SHORT).show();
-                    }else{
+                    }else{*/
 
                         dialog.setMessage("Fetching Images");
                         dialog.show();
                         pageNumber = 1;
                         searchValue = et_searchtxt.getText().toString();
-                        mMainActivityViewModel.getMasterData(pageNumber,et_searchtxt.getText().toString()).observe(MainActivity.this, new Observer<List<MasterData>>() {
-                            @Override
-                            public void onChanged(@Nullable List<MasterData> data) {
-                                dialog.dismiss();
-                                masterList.clear();
-                                if (data!=null)
-                                    masterList.addAll(data);
-                                else
-                                    Toast.makeText(MainActivity.this,"Search Failed. Try Again",Toast.LENGTH_SHORT).show();
 
-                                imageSearchAdapter.notifyDataSetChanged();
-                            }
-                        });
-                    }
+                        getData(pageNumber);
+
+                    //}
                 }
-            }
+
+        });
+    }
+
+
+    private void initViewHolder() {
+
+        mMainActivityViewModel =  ViewModelProviders.of(this).get(MainActivityViewModel.class);
+
+
+        mMainActivityViewModel.init(getApplicationContext());
+
+
+        mMainActivityViewModel.getData().observe(MainActivity.this, data -> {
+            if (data!=null)
+                masterList.addAll(data);
+
+            imageSearchAdapter.notifyDataSetChanged();
         });
 
     }
@@ -164,24 +165,35 @@ public class MainActivity extends AppCompatActivity {
                 if(isScrolling && (currentItem + scrollItems == totalItems)){
                     pageNumber = pageNumber+1;
 
+                    isScrolling = false;
                     if (pageNumber<4){
                         proBar.setVisibility(View.VISIBLE);
-                        mMainActivityViewModel.getMasterData(pageNumber,searchValue).observe(MainActivity.this, new Observer<List<MasterData>>() {
-                            @Override
-                            public void onChanged(@Nullable List<MasterData> data) {
-                                proBar.setVisibility(View.GONE);
-                                if (data!=null)
-                                    masterList.addAll(data);
-                                else
-                                    Toast.makeText(MainActivity.this,"Search Failed. Try Again",Toast.LENGTH_SHORT).show();
-
-                                imageSearchAdapter.notifyDataSetChanged();
-                            }
-                        });
+                        getData(pageNumber);
                     }
                 }
 
             }
+        });
+
+    }
+
+    private void getData(int pageNumber) {
+
+        mMainActivityViewModel.getMasterData(pageNumber,searchValue).observe(MainActivity.this, data -> {
+            proBar.setVisibility(View.GONE);
+
+            if (dialog.isShowing())
+                dialog.dismiss();
+
+            if (pageNumber == 1)
+                masterList.clear();
+
+            if (data!=null)
+                masterList.addAll(data);
+            else
+                Toast.makeText(MainActivity.this,"Search Failed. Try Again",Toast.LENGTH_SHORT).show();
+
+            imageSearchAdapter.notifyDataSetChanged();
         });
 
     }

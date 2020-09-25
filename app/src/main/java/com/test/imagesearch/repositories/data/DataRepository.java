@@ -55,10 +55,7 @@ public class DataRepository {
                                      try {
                                          if (response.isSuccessful()) {
 
-                                             if (pageNumber==1)
-                                                dataSet.clear();
-
-
+                                             dataSet.clear();
                                              dataSet.addAll(response.body().getResults());
                                               new insertData(response.body().getResults()).execute();
                                              data.setValue(dataSet);
@@ -121,7 +118,7 @@ public class DataRepository {
         protected List<MasterData> doInBackground(Void... voids) {
 
 
-            List<MasterData> taskList = DatabaseClient
+            List<MasterData> imgList = DatabaseClient
                     .getInstance(context)
                     .getAppDatabase()
                     .dataDao()
@@ -129,7 +126,7 @@ public class DataRepository {
 
 
 
-            return taskList;
+            return imgList;
         }
 
         @Override

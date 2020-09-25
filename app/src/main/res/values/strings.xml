@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">ImageSearch</string>
+    <string name="search">Search</string>
+    <string name="hint_to_search">Enter Image Name to Search</string>
+    <string name="image_display">Image Display</string>
+    <string name="enter_comment">Enter Comment</string>
+    <string name="save">Save</string>
 </resources>

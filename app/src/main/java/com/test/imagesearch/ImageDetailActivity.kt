@@ -25,7 +25,7 @@ class ImageDetailActivity : AppCompatActivity() {
     lateinit var iv_display: ImageView
     lateinit var et_comment: EditText
     lateinit var btn_save: Button
-    internal var id: String? = null
+    lateinit var id: String
 
     lateinit var toolbar: Toolbar
 
@@ -47,7 +47,7 @@ class ImageDetailActivity : AppCompatActivity() {
 
         mImageViewModel.init(applicationContext)
 
-        mImageViewModel.getSingdleData(id.toString()).observe(this@ImageDetailActivity, Observer { data ->
+        mImageViewModel.getSingdleData(id).observe(this@ImageDetailActivity, Observer { data ->
 
             if (data != null) {
                 setData(data)
@@ -82,14 +82,14 @@ class ImageDetailActivity : AppCompatActivity() {
     }
 
 
-    internal inner class updateComment(var local_comment: String) : AsyncTask<Void, Void, List<MasterData>>() {
+    internal inner class updateComment(var local_comment: String) : AsyncTask<Void, Void, Void>() {
 
 
         override fun onPreExecute() {
             super.onPreExecute()
         }
 
-        override fun doInBackground(vararg voids: Void): List<MasterData>? {
+        override fun doInBackground(vararg voids: Void): Void? {
 
 
             DatabaseClient
@@ -103,8 +103,10 @@ class ImageDetailActivity : AppCompatActivity() {
             return null
         }
 
-        override fun onPostExecute(data: List<MasterData>) {
-            super.onPostExecute(data)
+        override fun onPostExecute(result: Void?) {
+            super.onPostExecute(result)
+
+            Toast.makeText(this@ImageDetailActivity,"Comment Saved",Toast.LENGTH_SHORT).show()
         }
     }
 }
